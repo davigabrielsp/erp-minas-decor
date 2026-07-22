@@ -1,0 +1,34 @@
+name: Deploy ERP
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy na VPS
+        uses: appleboy/ssh-action@v1.2.0
+
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+
+          script: |
+            cd /var/www/erp-minas-decor
+
+            git pull origin master
+
+            cd backend
+            npm install
+            npm run build
+
+            pm2 restart erp-minas-decor-api || pm2 start dist/server.js --name erp-minas-decor-api
+
+            cd ../frontend
+            npm install
+            npm run build
